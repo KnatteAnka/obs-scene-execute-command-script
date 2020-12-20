@@ -26,6 +26,9 @@
 obs = obslua
 settings = {}
 
+
+
+
 -- Script hook for defining the script description
 function script_description()
 local description = [[
@@ -79,9 +82,11 @@ function script_properties()
 		end	
 	end
 	
+	--Set last scene to current scene when loading script
+	
 	obs.source_list_release(scenes)
-	-- Set starting value of remember last
-	--obs.obs_properties_set_param(props,
+	
+	
 	return props
 end
 
@@ -91,8 +96,26 @@ function script_update(_settings)
 end
 
 -- Script hook that is called when the script is loaded
+last_scene = ""
+preview_last_scene = ""
+
 function script_load(settings)
 	obs.obs_frontend_add_event_callback(handle_event)
+	
+	------------------------------------------------------------------------------
+	-- Set starting value of remember last
+	
+	--obs.obs_properties_set_param(props,new_last_scene,obs.obs_frontend_get_current_scene())
+	--local scene_name = "A"--obs.obs_properties_get_param(new_last_scene)
+	local scene = obs.obs_frontend_get_current_scene()
+	last_scene = obs.obs_source_get_name(scene)
+	--obs.script_log(obs.LOG_INFO, "Starting Scene: \n" .. last_scene .. " ")
+	
+	-- Preview
+    
+	local scene = obs.obs_frontend_get_current_preview_scene()
+	preview_last_scene = obs.obs_source_get_name(scene)
+	obs.script_log(obs.LOG_INFO, "\nStarting Scene: \nLive: " .. last_scene .. " \nPreview: " .. preview_last_scene)
 end
 
 function handle_event(event)
@@ -106,7 +129,7 @@ function handle_event(event)
 	end
 end
 
-local last_scene = ""
+--last_scene = obs.obs_frontend_get_current_scene()
 
 
 function handle_scene_change()
@@ -119,10 +142,10 @@ function handle_scene_change()
 		local command = obs.obs_data_get_string(settings, "command")
 		local scene_value = obs.obs_data_get_string(settings, "scene_value_" .. scene_name)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
-		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Executing command:\n  " .. scene_command .. " Last Scene:" .. last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating " .. scene_name .. ". Executing command:\n  " .. scene_command .. " Last Scene:" .. last_scene)
 		os.execute(scene_command)
 	else
-		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Command execution is disabled for this scene.".. " Last Scene:" .. last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating " .. scene_name .. ". Command execution is disabled for this scene.".. " Last Scene:" .. last_scene)
 	end
 	-- Inactive tests
 	local scene_inactiv_enabled = obs.obs_data_get_bool(settings, "scene_inacktiv_enabled_" .. last_scene)
@@ -130,16 +153,18 @@ function handle_scene_change()
 		local command = obs.obs_data_get_string(settings, "Preview_command")
 		local scene_value = obs.obs_data_get_string(settings, "Preview_scene_value_" .. last_scene)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
-		obs.script_log(obs.LOG_INFO, "Activating Deactivation " .. last_scene .. ". Executing command:\n  " .. scene_command)
+		obs.script_log(obs.LOG_INFO, "\nActivating Deactivation " .. last_scene .. ". Executing command:\n  " .. scene_command)
 		os.execute(scene_command)
 	else
-		obs.script_log(obs.LOG_INFO, "Activating Deactivation " .. last_scene .. ". Command execution is disabled for this scene.")
+		obs.script_log(obs.LOG_INFO, "\nActivating Deactivation " .. last_scene .. ". Command execution is disabled for this scene.")
 	end
 	last_scene = scene_name
 	obs.obs_source_release(scene);
 end
 
-local preview_last_scene = ""
+
+
+
 
 
 
@@ -153,10 +178,10 @@ function handle_scene_change_Preview()
 		local command = obs.obs_data_get_string(settings, "Preview_command")
 		local scene_value = obs.obs_data_get_string(settings, "Preview_scene_value_" .. scene_name)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
-		obs.script_log(obs.LOG_INFO, "Activating Preview " .. scene_name .. ". Executing command:\n  " .. scene_command.. " \nLast Scene:" .. preview_last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating Preview " .. scene_name .. ". Executing command:\n  " .. scene_command.. " \nLast Scene:" .. preview_last_scene)
 		os.execute(scene_command)
 	else
-		obs.script_log(obs.LOG_INFO, "Activating Preview " .. scene_name .. ". Command execution is disabled for this scene.".. " \nLast Scene:" .. preview_last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating Preview " .. scene_name .. ". Command execution is disabled for this scene.".. " \nLast Scene:" .. preview_last_scene)
 	end
 	-- Inactive tests
 	local scene_inactiv_enabled = obs.obs_data_get_bool(settings, "Preview_scene_inacktiv_enabled_" .. preview_last_scene)
@@ -164,10 +189,10 @@ function handle_scene_change_Preview()
 		local command = obs.obs_data_get_string(settings, "Preview_command")
 		local scene_value = obs.obs_data_get_string(settings, "Preview_scene_value_" .. preview_last_scene)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
-		obs.script_log(obs.LOG_INFO, "Activating Deactivation Preview " .. preview_last_scene .. ". Executing command:\n  " .. scene_command.. " \nLast Scene:" .. preview_last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating Deactivation " .. preview_last_scene .. ". Executing command:\n  " .. scene_command)
 		os.execute(scene_command)
 	else
-		obs.script_log(obs.LOG_INFO, "Activating Deactivation Preview " .. preview_last_scene .. ". Command execution is disabled for this scene.".. " \nLast Scene:" .. preview_last_scene )
+		obs.script_log(obs.LOG_INFO, "\nActivating Deactivation " .. preview_last_scene .. ". Command execution is disabled for this scene.")
 	end
 	preview_last_scene = scene_name
 	obs.obs_source_release(scene);
