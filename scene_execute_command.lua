@@ -52,6 +52,7 @@ function script_properties()
 	local props = obs.obs_properties_create()
 
 	obs.obs_properties_add_text(props, "command", "Command", obs.OBS_TEXT_DEFAULT)
+	obs.obs_properties_add_text(props, "Preview_command", "Preview Command", obs.OBS_TEXT_DEFAULT)
 	
 	local scenes = obs.obs_frontend_get_scenes()
 	
@@ -60,6 +61,8 @@ function script_properties()
 			local scene_name = obs.obs_source_get_name(scene)
 			obs.obs_properties_add_bool(props, "scene_enabled_" .. scene_name, "Execute when '" .. scene_name .. "' is activated")
 			obs.obs_properties_add_text(props, "scene_value_" .. scene_name, scene_name .. " value", obs.OBS_TEXT_DEFAULT)
+			obs.obs_properties_add_bool(props, "Preview_scene_enabled_" .. scene_name, "Execute when '" .. scene_name .. "' is activated")
+			obs.obs_properties_add_text(props, "Preview_scene_value_" .. scene_name, scene_name .. " value", obs.OBS_TEXT_DEFAULT)
 		end
 	end
 	
@@ -79,10 +82,16 @@ function script_load(settings)
 end
 
 function handle_event(event)
+	-- Streaming changed
 	if event == obs.OBS_FRONTEND_EVENT_SCENE_CHANGED then
 		handle_scene_change()	
 	end
+	-- Prewiew Changed
+	if event == obs.OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED then
+		handle_scene_change_Preview()	
+	end
 end
+
 
 function handle_scene_change()
 	local scene = obs.obs_frontend_get_current_scene()
@@ -91,6 +100,22 @@ function handle_scene_change()
 	if scene_enabled then
 		local command = obs.obs_data_get_string(settings, "command")
 		local scene_value = obs.obs_data_get_string(settings, "scene_value_" .. scene_name)
+		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
+		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Executing command:\n  " .. scene_command)
+		os.execute(scene_command)
+	else
+		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Command execution is disabled for this scene.")
+	end
+	obs.obs_source_release(scene);
+end
+
+function handle_scene_change_Preview()
+	local scene = obs.obs_frontend_get_current_preview_scene()
+	local scene_name = obs.obs_source_get_name(scene)
+	local scene_enabled = obs.obs_data_get_bool(settings, "Preview_scene_enabled_" .. scene_name)
+	if scene_enabled then
+		local command = obs.obs_data_get_string(settings, "Preview_command")
+		local scene_value = obs.obs_data_get_string(settings, "Preview_scene_value_" .. scene_name)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
 		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Executing command:\n  " .. scene_command)
 		os.execute(scene_command)
