@@ -28,42 +28,53 @@ settings = {}
 
 -- Script hook for defining the script description
 function script_description()
-	return [[
-Execute a CLI command whenever a scene is activated.
-
-When specifying the command 'SCENE_VALUE' can be used to denote the 'value' that was entered for the scene.
-
-Example:
-When command is
-    curl -X POST http://192.168.1.123/load-preset -d "preset=SCENE_VALUE"
-
-And Scene 1 value is
-    5
-
-Activating Scene 1 would execute:
-    curl -X POST http://192.168.1.123/load-preset -d "preset=5"
-
-See https://github.com/marklagendijk/obs-scene-execute-command-script/ for further documentation and examples.
-]]
+local description = [[
+<center><h2>Execute a CLI command whenever a scene is activated.</h2></center>
+<br>
+When specifying the command 'SCENE_VALUE' can be used to denote the 'value' that was entered for the scene.<br>
+<br>
+Example:<br>
+When command is<br>
+    curl -X POST http://192.168.1.123/load-preset -d "preset=SCENE_VALUE"<br>
+<br>
+And Scene 1 value is<br>
+    5<br>
+<br>
+Activating Scene 1 would execute:<br>
+    curl -X POST http://192.168.1.123/load-preset -d "preset=5"<br>
+<p>See <a href="https://github.com/marklagendijk/obs-scene-execute-command-script/">https://github.com/marklagendijk/obs-scene-execute-command-script/</a> for further documentation and examples.
+<hr/></p>]]
+	return description
 end
 
 -- Script hook for defining the settings that can be configured for the script
 function script_properties()
 	local props = obs.obs_properties_create()
-
+	-- Live
 	obs.obs_properties_add_text(props, "command", "Command", obs.OBS_TEXT_DEFAULT)
-	obs.obs_properties_add_text(props, "Preview_command", "Preview Command", obs.OBS_TEXT_DEFAULT)
+	-- Preview
+	obs.obs_properties_add_text(props, "Preview_command", "<p>Preview Command<hr/></p>", obs.OBS_TEXT_DEFAULT)
 	
 	local scenes = obs.obs_frontend_get_scenes()
+	obs.obs_properties_add_int_slider(props, "N/A", "<p>Live Scene Settings:<hr/></p>", 0,0,0)
+	if scenes ~= nil then
+		for _, scene in ipairs(scenes) do
+			local scene_name = obs.obs_source_get_name(scene)
+			-- Live
+			obs.obs_properties_add_bool(props, "scene_enabled_" .. scene_name, "Execute when '" .. scene_name .. "' is activated")
+			obs.obs_properties_add_text(props, "scene_value_" .. scene_name, scene_name .. " value", obs.OBS_TEXT_DEFAULT)
+		end
+	end	
+	    --obs.obs_properties_add_text(props, "N/A", "<p><hr/><br>Preview Settings<hr/></p>", obs.OBS_TEXT_DEFAULT)
+	    obs.obs_properties_add_int_slider(props, "N/A2", "<p>Preview Scene Settings:<hr/></p>", 0,0,0)
 	
 	if scenes ~= nil then
 		for _, scene in ipairs(scenes) do
 			local scene_name = obs.obs_source_get_name(scene)
-			obs.obs_properties_add_bool(props, "scene_enabled_" .. scene_name, "Execute when '" .. scene_name .. "' is activated")
-			obs.obs_properties_add_text(props, "scene_value_" .. scene_name, scene_name .. " value", obs.OBS_TEXT_DEFAULT)
+			-- Preview
 			obs.obs_properties_add_bool(props, "Preview_scene_enabled_" .. scene_name, "Execute when '" .. scene_name .. "' is activated")
-			obs.obs_properties_add_text(props, "Preview_scene_value_" .. scene_name, scene_name .. " value", obs.OBS_TEXT_DEFAULT)
-		end
+			obs.obs_properties_add_text(props, "Preview_scene_value_" .. scene_name,"Preview ".. scene_name .. " value", obs.OBS_TEXT_DEFAULT)
+		end	
 	end
 	
 	obs.source_list_release(scenes)
@@ -82,7 +93,7 @@ function script_load(settings)
 end
 
 function handle_event(event)
-	-- Streaming changed
+	-- Live changed
 	if event == obs.OBS_FRONTEND_EVENT_SCENE_CHANGED then
 		handle_scene_change()	
 	end
@@ -94,6 +105,7 @@ end
 
 
 function handle_scene_change()
+    -- Live
 	local scene = obs.obs_frontend_get_current_scene()
 	local scene_name = obs.obs_source_get_name(scene)
 	local scene_enabled = obs.obs_data_get_bool(settings, "scene_enabled_" .. scene_name)
@@ -110,6 +122,7 @@ function handle_scene_change()
 end
 
 function handle_scene_change_Preview()
+    -- Preview
 	local scene = obs.obs_frontend_get_current_preview_scene()
 	local scene_name = obs.obs_source_get_name(scene)
 	local scene_enabled = obs.obs_data_get_bool(settings, "Preview_scene_enabled_" .. scene_name)
@@ -117,10 +130,10 @@ function handle_scene_change_Preview()
 		local command = obs.obs_data_get_string(settings, "Preview_command")
 		local scene_value = obs.obs_data_get_string(settings, "Preview_scene_value_" .. scene_name)
 		local scene_command = string.gsub(command, "SCENE_VALUE", scene_value)
-		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Executing command:\n  " .. scene_command)
+		obs.script_log(obs.LOG_INFO, "Activating Preview" .. scene_name .. ". Executing command:\n  " .. scene_command)
 		os.execute(scene_command)
 	else
-		obs.script_log(obs.LOG_INFO, "Activating " .. scene_name .. ". Command execution is disabled for this scene.")
+		obs.script_log(obs.LOG_INFO, "Activating Preview" .. scene_name .. ". Command execution is disabled for this scene.")
 	end
 	obs.obs_source_release(scene);
 end
