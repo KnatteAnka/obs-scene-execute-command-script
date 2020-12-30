@@ -86,3 +86,6 @@ Many PTZ cameras have support for the ONVIF protocol. Since this is an old SOAP 
   * Generalized and improved the script
   * Wrote documenation
   * Published it [on GitHub](https://github.com/marklagendijk/obs-scene-execute-command-scrip) and [OBS Forums](https://obsproject.com/forum/resources/scene-execute-command.1028/)
+* [KnatteAnka] (https://github.com/KnatteAnka
+  * Improved the script and added functions
+  
