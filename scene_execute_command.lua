@@ -136,6 +136,10 @@ function handle_scene_change()
     -- Live
 	local scene = obs.obs_frontend_get_current_scene()
 	local scene_name = obs.obs_source_get_name(scene)
+	if (scene_name == nil) then
+		return
+	end
+	
 	local scene_enabled = obs.obs_data_get_bool(settings, "scene_enabled_" .. scene_name)
 	local last_scene = StoreLive()
 	
@@ -185,6 +189,10 @@ function handle_scene_change_Preview()
     -- Preview
 	local scene = obs.obs_frontend_get_current_preview_scene()
 	local scene_name = obs.obs_source_get_name(scene)
+	if (scene_name == nil) then
+		return
+	end
+	
 	local scene_enabled = obs.obs_data_get_bool(settings, "Preview_scene_enabled_" .. scene_name)
 	local preview_last_scene = StorePreview()
 	
